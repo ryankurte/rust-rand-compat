@@ -1,39 +1,39 @@
 //! A compatibility layer for `rand` and `rand_core` providing adaptation between traits for each version
-//! 
+//!
 //! ## Forward compatibility (using `rand/std` for `rand_0_7::OsRng`)
-//! 
+//!
 #![cfg_attr(not(feature = "std"), doc = "```ignore")]
 #![cfg_attr(feature = "std", doc = "```")]
 //! use rand_0_7::rngs::OsRng;
 //! use rand_core_0_6::RngCore;
 //! use rand_compat::ForwardCompat;
-//! 
+//!
 //! fn something(r: &mut impl RngCore) -> u32 {
 //!     r.next_u32()
 //! }
-//! 
+//!
 //! let mut rng = OsRng;
-//! 
+//!
 //! let n = something(&mut rng.forward());
 //! ```
-//! 
+//!
 //! ## Backward compatibility (using `rand/std` for `rand_0_8::OsRng`)
-//! 
+//!
 #![cfg_attr(not(feature = "std"), doc = "```ignore")]
 #![cfg_attr(feature = "std", doc = "```")]
 //! use rand_0_8::rngs::OsRng;
 //! use rand_core_0_5::RngCore;
 //! use rand_compat::BackwardCompat;
-//! 
+//!
 //! fn something(r: &mut impl RngCore) -> u32 {
 //!     r.next_u32()
 //! }
-//! 
+//!
 //! let mut rng = OsRng;
-//! 
+//!
 //! let n = something(&mut rng.backward());
 //! ```
-//! 
+//!
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -55,7 +55,7 @@ pub trait ForwardCompat<T> {
     fn forward(self) -> Forward<T>;
 }
 
-impl <T: rand_core_0_5::RngCore> ForwardCompat<T> for T {
+impl<T: rand_core_0_5::RngCore> ForwardCompat<T> for T {
     /// Call `.forward()` on an 0.5.x [`rand_core_0_5::RngCore`] to receive a 0.6.x [`rand_core_0_6::RngCore`] compatible instance
     fn forward(self) -> Forward<T> {
         Forward(self)
@@ -63,7 +63,7 @@ impl <T: rand_core_0_5::RngCore> ForwardCompat<T> for T {
 }
 
 /// Implementation of [`rand_core_0_6::RngCore`] for forward compatibility
-impl <T: rand_core_0_5::RngCore> rand_core_0_6::RngCore for Forward<T> {
+impl<T: rand_core_0_5::RngCore> rand_core_0_6::RngCore for Forward<T> {
     fn next_u32(&mut self) -> u32 {
         self.0.next_u32()
     }
@@ -82,7 +82,7 @@ impl <T: rand_core_0_5::RngCore> rand_core_0_6::RngCore for Forward<T> {
             Ok(_) => return Ok(()),
             Err(e) => e,
         };
-        
+
         // Map errors via code if available
         if let Some(c) = e.code() {
             return Err(rand_core_0_6::Error::from(c));
@@ -95,7 +95,10 @@ impl <T: rand_core_0_5::RngCore> rand_core_0_6::RngCore for Forward<T> {
 }
 
 /// [`rand_core_0_6::CryptoRng`] marker for [`rand_core_0_5::CryptoRng`] types
-impl <T: rand_core_0_5::RngCore + rand_core_0_5::CryptoRng> rand_core_0_6::CryptoRng for Backward<T> { }
+impl<T: rand_core_0_5::RngCore + rand_core_0_5::CryptoRng> rand_core_0_6::CryptoRng
+    for Backward<T>
+{
+}
 
 /// Backward compatibility container object
 #[derive(Debug, Clone, PartialEq)]
@@ -107,7 +110,7 @@ pub trait BackwardCompat<T> {
     fn backward(self) -> Backward<T>;
 }
 
-impl <T: rand_core_0_6::RngCore> BackwardCompat<T> for T {
+impl<T: rand_core_0_6::RngCore> BackwardCompat<T> for T {
     /// Call `.backward()` on an 0.6.x [`rand_core_0_6::RngCore`] to receive a 0.5.x [`rand_core_0_5::RngCore`] compatible instance
     fn backward(self) -> Backward<T> {
         Backward(self)
@@ -115,7 +118,7 @@ impl <T: rand_core_0_6::RngCore> BackwardCompat<T> for T {
 }
 
 /// Implementation of [`rand_core_0_5::RngCore`] for backward compatibility
-impl <T: rand_core_0_6::RngCore> rand_core_0_5::RngCore for Backward<T> {
+impl<T: rand_core_0_6::RngCore> rand_core_0_5::RngCore for Backward<T> {
     fn next_u32(&mut self) -> u32 {
         self.0.next_u32()
     }
@@ -134,12 +137,12 @@ impl <T: rand_core_0_6::RngCore> rand_core_0_5::RngCore for Backward<T> {
             Ok(_) => return Ok(()),
             Err(e) => e,
         };
-        
+
         // Map errors via code if available
         if let Some(c) = e.code() {
             return Err(rand_core_0_5::Error::from(c));
         }
-        
+
         // Otherwise we have to return an unknown error
         let c = unsafe { core::num::NonZeroU32::new_unchecked(getrandom::Error::CUSTOM_START) };
         Err(rand_core_0_5::Error::from(c))
@@ -147,7 +150,10 @@ impl <T: rand_core_0_6::RngCore> rand_core_0_5::RngCore for Backward<T> {
 }
 
 /// [`rand_core_0_5::CryptoRng`] marker for [`rand_core_0_6::CryptoRng`] types
-impl <T: rand_core_0_6::RngCore + rand_core_0_6::CryptoRng> rand_core_0_5::CryptoRng for Backward<T> { }
+impl<T: rand_core_0_6::RngCore + rand_core_0_6::CryptoRng> rand_core_0_5::CryptoRng
+    for Backward<T>
+{
+}
 
 #[cfg(test)]
 mod tests {

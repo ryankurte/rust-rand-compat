@@ -49,6 +49,7 @@ jobs:
       matrix:
         include:
           - target: x86_64-unknown-linux-gnu
+            test: true
           - target: thumbv6m-none-eabi
             args: --no-default-features
           - target: thumbv7em-none-eabihf 
@@ -73,7 +74,15 @@ jobs:
           ${{ env.HOME }}/.cargo
           target
 
-    - name: Build and test
+    - name: Build release
+      uses: actions-rs/cargo@v1
+      with:
+        use-cross: ${{ matrix.use_cross }}
+        command: build
+        args: --target ${{ matrix.target }} --release ${{ matrix.args }}
+
+    - name: Run tests (std / native only)
+      if: ${{ matrix.test == true }}
       uses: actions-rs/cargo@v1
       with:
         use-cross: ${{ matrix.use_cross }}

@@ -103,10 +103,7 @@ impl<T: rand_core_0_5::RngCore> rand_core_0_6::RngCore for Forward<T> {
 }
 
 /// Forward [`rand_core_0_6::CryptoRng`] marker for [`rand_core_0_5::CryptoRng`] types
-impl<T: rand_core_0_5::RngCore + rand_core_0_5::CryptoRng> rand_core_0_6::CryptoRng
-    for Forward<T>
-{
-}
+impl<T: rand_core_0_5::RngCore + rand_core_0_5::CryptoRng> rand_core_0_6::CryptoRng for Forward<T> {}
 
 /// Backward compatibility container object
 #[derive(Debug, Clone, PartialEq)]

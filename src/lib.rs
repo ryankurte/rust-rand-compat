@@ -5,14 +5,15 @@
 #![cfg_attr(not(feature = "std"), doc = "```ignore")]
 #![cfg_attr(feature = "std", doc = "```")]
 //! use rand_0_7::rngs::OsRng;
-//! use rand_core_0_6::RngCore;
+//! use rand_core_0_6::{RngCore, CryptoRng};
 //! use rand_compat::ForwardCompat;
 //!
-//! fn something(r: &mut impl RngCore) -> u32 {
+//! // RngCore + CryptoRng from rand_core@0.6.x
+//! fn something<R: RngCore + CryptoRng>(r: &mut R) -> u32 {
 //!     r.next_u32()
 //! }
 //!
-//! let mut rng = OsRng;
+//! let mut rng = OsRng;    // OsRng from rand@0.7.x (rand_core@0.5.x)
 //!
 //! let n = something(&mut rng.forward());
 //! ```
@@ -22,14 +23,15 @@
 #![cfg_attr(not(feature = "std"), doc = "```ignore")]
 #![cfg_attr(feature = "std", doc = "```")]
 //! use rand_0_8::rngs::OsRng;
-//! use rand_core_0_5::RngCore;
+//! use rand_core_0_5::{RngCore, CryptoRng};
 //! use rand_compat::BackwardCompat;
 //!
-//! fn something(r: &mut impl RngCore) -> u32 {
+//! // RngCore + CryptoRng from rand_core@0.5.x
+//! fn something<R: RngCore + CryptoRng>(r: &mut R) -> u32 {
 //!     r.next_u32()
 //! }
 //!
-//! let mut rng = OsRng;
+//! let mut rng = OsRng;    // OsRng from rand@0.8.x (rand_core@0.6.x)
 //!
 //! let n = something(&mut rng.backward());
 //! ```
@@ -44,6 +46,12 @@ pub use rand_core_0_5;
 
 /// Re-export of rand_core@0.6.x
 pub use rand_core_0_6;
+
+/// Re-export of rand@0.7.x
+pub use rand_0_7;
+
+/// Re-export of rand@0.8.x
+pub use rand_0_8;
 
 /// Forward compatibility container object
 #[derive(Debug, Clone, PartialEq)]
@@ -94,9 +102,9 @@ impl<T: rand_core_0_5::RngCore> rand_core_0_6::RngCore for Forward<T> {
     }
 }
 
-/// [`rand_core_0_6::CryptoRng`] marker for [`rand_core_0_5::CryptoRng`] types
+/// Forward [`rand_core_0_6::CryptoRng`] marker for [`rand_core_0_5::CryptoRng`] types
 impl<T: rand_core_0_5::RngCore + rand_core_0_5::CryptoRng> rand_core_0_6::CryptoRng
-    for Backward<T>
+    for Forward<T>
 {
 }
 
@@ -149,7 +157,7 @@ impl<T: rand_core_0_6::RngCore> rand_core_0_5::RngCore for Backward<T> {
     }
 }
 
-/// [`rand_core_0_5::CryptoRng`] marker for [`rand_core_0_6::CryptoRng`] types
+/// Backward [`rand_core_0_5::CryptoRng`] marker for [`rand_core_0_6::CryptoRng`] types
 impl<T: rand_core_0_6::RngCore + rand_core_0_6::CryptoRng> rand_core_0_5::CryptoRng
     for Backward<T>
 {
